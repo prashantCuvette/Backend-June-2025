@@ -1,5 +1,7 @@
 import { User } from "../models/users.model.js";
 import bcrypt from "bcryptjs";
+import express from "express"
+import { generateToken } from "../utils/generateToken.js";
 
 export const getAllUser = async (req, res) => {
     try {
@@ -55,6 +57,14 @@ export const createNewUser = async (req, res) => {
             password: hashedPassword,
         });
 
+        const accessToken = generateToken(newUser._id);
+
+        res.cookie("accessToken", accessToken, {
+            httpOnly: true, // this does not allow JS to access cookies
+            maxAge: 1000 * 60 * 60 * 24, // in miliseconds
+            secure: false, // trueif using HTTPS
+        });
+
         return res
             .status(201)
             .json({
@@ -105,6 +115,14 @@ export const loginUser = async (req, res) => {
                 });
         }
 
+        const accessToken = generateToken(findExistingUser._id);
+
+        res.cookie("accessToken", accessToken, {
+            httpOnly: true, // this does not allow JS to access cookies
+            maxAge: 1000 * 60 * 60 * 24, // in miliseconds
+            secure: false, // trueif using HTTPS
+        });
+
         return res.status(200).json({
             success: true,
             message: "login successful",
@@ -121,6 +139,45 @@ export const loginUser = async (req, res) => {
     }
 };
 
-export const updateUser = () => { };
+export const updateUser = async (req, res) => {
+    const { id } = req.user;
 
-export const deleteUser = () => { };
+    const findUser = await User.findById(id);
+    if (!findUser) {
+        res.status(404).json({
+            success: false,
+            message: "user not found"
+        })
+    }
+
+    
+
+};
+
+export const deleteUser = async (req, res) => {
+    try {
+        const { id } = req.user;
+
+        const findUser = await User.findById(id);
+        if (!findUser) {
+            res.status(404).json({
+                success: false,
+                message: "user not found"
+            });
+        }
+
+        res.clearCookie("accessToken", {
+            httpOnly: true,
+            maxAge: 1000 * 60 * 60 * 24,
+            secure: false,
+        });
+
+        await User.deleteOne({ _id: id });
+        res.status(200).json({
+            success: true,
+            message: "user deleted successfully"
+        });
+    } catch (error) {
+
+    }
+};

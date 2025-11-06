@@ -1,11 +1,13 @@
 import express from "express";
 import { envVariables } from "./configs/envVariables.js";
 import { connectDB } from "./configs/connectDB.js";
+import cookieParser from "cookie-parser";
 
 const app = express();
 connectDB();
 
 app.use(express.json());
+app.use(cookieParser());
 
 // check route to see if the server is running
 app.get("/", (req, res) => {
