@@ -1,6 +1,5 @@
 import { User } from "../models/users.model.js";
 import bcrypt from "bcryptjs";
-import express from "express"
 import { generateToken } from "../utils/generateToken.js";
 
 export const getAllUser = async (req, res) => {
@@ -140,18 +139,43 @@ export const loginUser = async (req, res) => {
 };
 
 export const updateUser = async (req, res) => {
-    const { id } = req.user;
+    try {
+        const { id } = req.user;
+        const data = req.body;
 
-    const findUser = await User.findById(id);
-    if (!findUser) {
-        res.status(404).json({
+        if (!data || Object.keys(data).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "no data provided to update",
+            });
+        }
+
+        const findUser = await User.findById(id);
+        if (!findUser) {
+            return res.status(404).json({
+                success: false,
+                message: "user not found",
+            });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(data?.password, salt);
+
+        Object.assign(findUser, {...data, password: hashedPassword});
+        await findUser.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "user details updated successfully",
+            user: findUser,
+        });
+    } catch (error) {
+        console.log(error.message);
+        return res.status(500).json({
             success: false,
-            message: "user not found"
-        })
+            message: "failed to update user details",
+        });
     }
-
-    
-
 };
 
 export const deleteUser = async (req, res) => {
@@ -178,6 +202,41 @@ export const deleteUser = async (req, res) => {
             message: "user deleted successfully"
         });
     } catch (error) {
-
+        console.log(error.message);
+        return res.status(500).json({
+            success: false,
+            message: "failed to delete user",
+        });
     }
 };
+
+export const logoutUser = async (req, res) => {
+    try {
+        const { id } = req.user;
+
+        const findUser = await User.findById(id);
+        if (!findUser) {
+            res.status(404).json({
+                success: false,
+                message: "user not found"
+            });
+        }
+
+        res.clearCookie("accessToken", {
+            httpOnly: true,
+            maxAge: 1000 * 60 * 60 * 24,
+            secure: false,
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "user logged out successfully"
+        });
+    } catch (error) {
+        console.log(error.message);
+        return res.status(500).json({
+            success: false,
+            message: "failed to delete user",
+        });
+    }
+}

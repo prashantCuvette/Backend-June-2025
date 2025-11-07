@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createNewUser, deleteUser, getAllUser, loginUser, updateUser } from "../controllers/users.controller.js";
+import { createNewUser, deleteUser, getAllUser, loginUser, logoutUser, updateUser } from "../controllers/users.controller.js";
 import { authenticateUser } from "../middlewares/auth.middleware.js";
 
 export const usersRouter = Router();
@@ -11,9 +11,11 @@ usersRouter.post("/", createNewUser);
 
 usersRouter.post("/login", loginUser);
 
-usersRouter.patch("/:id", authenticateUser, updateUser);
+usersRouter.get("/logout", authenticateUser, logoutUser);
 
-usersRouter.delete("/:id", authenticateUser, deleteUser);
+usersRouter.patch("/", authenticateUser, updateUser);
+
+usersRouter.delete("/", authenticateUser, deleteUser);
 
 
 

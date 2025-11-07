@@ -2,12 +2,17 @@ import express from "express";
 import { envVariables } from "./configs/envVariables.js";
 import { connectDB } from "./configs/connectDB.js";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 
 const app = express();
 connectDB();
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors({
+    origin: envVariables.clientUrl,
+    credentials: true,
+}))
 
 // check route to see if the server is running
 app.get("/", (req, res) => {
