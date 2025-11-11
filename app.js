@@ -22,6 +22,9 @@ app.get("/", (req, res) => {
 import { usersRouter } from "./routes/users.route.js";
 app.use("/api/v1/users", usersRouter);
 
+import { productsRouter } from "./routes/products.route.js";
+app.use("/api/v1/products", productsRouter);
+
 
 app.listen(envVariables.port, () => {
     console.log(`Server is running on port ${envVariables.port}`);
